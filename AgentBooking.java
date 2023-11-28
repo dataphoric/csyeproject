@@ -2,9 +2,10 @@
 /*This code was generated using the UMPLE 1.32.1.6535.66c005ced modeling language!*/
 
 
+import java.util.*;
 
-// line 142 "model.ump"
-// line 249 "model.ump"
+// line 143 "model.ump"
+// line 250 "model.ump"
 public class AgentBooking extends Booking
 {
 
@@ -20,9 +21,9 @@ public class AgentBooking extends Booking
   // CONSTRUCTOR
   //------------------------
 
-  public AgentBooking(string aBookingID, date aBookingDate, string aPaymentInfo, Passenger aPassenger, Seat aSeat, Payment aPayment, string aAgentID, string aAgentName)
+  public AgentBooking(string aBookingID, date aBookingDate, string aPaymentInfo, Passenger aPassenger, string aAgentID, string aAgentName)
   {
-    super(aBookingID, aBookingDate, aPaymentInfo, aPassenger, aSeat, aPayment);
+    super(aBookingID, aBookingDate, aPaymentInfo, aPassenger);
     agentID = aAgentID;
     agentName = aAgentName;
   }

@@ -2,9 +2,10 @@
 /*This code was generated using the UMPLE 1.32.1.6535.66c005ced modeling language!*/
 
 
+import java.util.*;
 
-// line 180 "model.ump"
-// line 259 "model.ump"
+// line 181 "model.ump"
+// line 260 "model.ump"
 public class CardPayment extends Payment
 {
 
@@ -19,9 +20,9 @@ public class CardPayment extends Payment
   // CONSTRUCTOR
   //------------------------
 
-  public CardPayment(string aPaymentID, int aAmount, string aCurrency, string aBookingID, Booking aBooking, string aCardType)
+  public CardPayment(string aPaymentID, int aAmount, string aCurrency, string aBookingID, string aCardType)
   {
-    super(aPaymentID, aAmount, aCurrency, aBookingID, aBooking);
+    super(aPaymentID, aAmount, aCurrency, aBookingID);
     cardType = aCardType;
   }
 

@@ -3,8 +3,8 @@
 
 
 
-// line 42 "model.ump"
-// line 208 "model.ump"
+// line 43 "model.ump"
+// line 209 "model.ump"
 public class Aircraft
 {
 
@@ -36,12 +36,12 @@ public class Aircraft
     flight = aFlight;
   }
 
-  public Aircraft(string aAircraftID, string aModel, int aCapacity, string aFlightNumberForFlight, string aAircraftNoForFlight, string aDepartureAirportForFlight, string aArrivalAirportForFlight, datetime aDepartureTimeForFlight, datetime aArrivalTimeForFlight, string aStopsForFlight)
+  public Aircraft(string aAircraftID, string aModel, int aCapacity, string aFlightNumberForFlight, string aAircraftNoForFlight, string aDepartureAirportForFlight, string aArrivalAirportForFlight, datetime aDepartureTimeForFlight, datetime aArrivalTimeForFlight, string aStopsForFlight, Seat[] allSeatsForFlight, Crew[] allCrewsForFlight)
   {
     aircraftID = aAircraftID;
     model = aModel;
     capacity = aCapacity;
-    flight = new Flight(aFlightNumberForFlight, aAircraftNoForFlight, aDepartureAirportForFlight, aArrivalAirportForFlight, aDepartureTimeForFlight, aArrivalTimeForFlight, aStopsForFlight, this);
+    flight = new Flight(aFlightNumberForFlight, aAircraftNoForFlight, aDepartureAirportForFlight, aArrivalAirportForFlight, aDepartureTimeForFlight, aArrivalTimeForFlight, aStopsForFlight, this, allSeatsForFlight, allCrewsForFlight);
   }
 
   //------------------------
@@ -102,12 +102,12 @@ public class Aircraft
     }
   }
 
-  // line 49 "model.ump"
+  // line 50 "model.ump"
    public void loadCargo(){
     
   }
 
-  // line 52 "model.ump"
+  // line 53 "model.ump"
    public void boardingPassenger(){
     
   }

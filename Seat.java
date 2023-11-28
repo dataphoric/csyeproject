@@ -2,9 +2,10 @@
 /*This code was generated using the UMPLE 1.32.1.6535.66c005ced modeling language!*/
 
 
+import java.util.*;
 
-// line 55 "model.ump"
-// line 213 "model.ump"
+// line 56 "model.ump"
+// line 214 "model.ump"
 public class Seat
 {
 
@@ -18,41 +19,20 @@ public class Seat
   private boolean isOccuped;
 
   //Seat Associations
-  private Flight flight;
-  private Booking booking;
+  private List<Flight> flights;
+  private List<Booking> bookings;
 
   //------------------------
   // CONSTRUCTOR
   //------------------------
 
-  public Seat(string aSeatNumber, string aSeatClass, boolean aIsOccuped, Flight aFlight, Booking aBooking)
+  public Seat(string aSeatNumber, string aSeatClass, boolean aIsOccuped)
   {
     seatNumber = aSeatNumber;
     seatClass = aSeatClass;
     isOccuped = aIsOccuped;
-    boolean didAddFlight = setFlight(aFlight);
-    if (!didAddFlight)
-    {
-      throw new RuntimeException("Unable to create seat due to flight. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
-    }
-    if (aBooking == null || aBooking.getSeat() != null)
-    {
-      throw new RuntimeException("Unable to create Seat due to aBooking. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
-    }
-    booking = aBooking;
-  }
-
-  public Seat(string aSeatNumber, string aSeatClass, boolean aIsOccuped, Flight aFlight, string aBookingIDForBooking, date aBookingDateForBooking, string aPaymentInfoForBooking, Passenger aPassengerForBooking, Payment aPaymentForBooking)
-  {
-    seatNumber = aSeatNumber;
-    seatClass = aSeatClass;
-    isOccuped = aIsOccuped;
-    boolean didAddFlight = setFlight(aFlight);
-    if (!didAddFlight)
-    {
-      throw new RuntimeException("Unable to create seat due to flight. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
-    }
-    booking = new Booking(aBookingIDForBooking, aBookingDateForBooking, aPaymentInfoForBooking, aPassengerForBooking, this, aPaymentForBooking);
+    flights = new ArrayList<Flight>();
+    bookings = new ArrayList<Booking>();
   }
 
   //------------------------
@@ -97,53 +77,255 @@ public class Seat
   {
     return isOccuped;
   }
-  /* Code from template association_GetOne */
-  public Flight getFlight()
+  /* Code from template association_GetMany */
+  public Flight getFlight(int index)
   {
-    return flight;
+    Flight aFlight = flights.get(index);
+    return aFlight;
   }
-  /* Code from template association_GetOne */
-  public Booking getBooking()
+
+  public List<Flight> getFlights()
   {
-    return booking;
+    List<Flight> newFlights = Collections.unmodifiableList(flights);
+    return newFlights;
   }
-  /* Code from template association_SetOneToMany */
-  public boolean setFlight(Flight aFlight)
+
+  public int numberOfFlights()
   {
-    boolean wasSet = false;
-    if (aFlight == null)
+    int number = flights.size();
+    return number;
+  }
+
+  public boolean hasFlights()
+  {
+    boolean has = flights.size() > 0;
+    return has;
+  }
+
+  public int indexOfFlight(Flight aFlight)
+  {
+    int index = flights.indexOf(aFlight);
+    return index;
+  }
+  /* Code from template association_GetMany */
+  public Booking getBooking(int index)
+  {
+    Booking aBooking = bookings.get(index);
+    return aBooking;
+  }
+
+  public List<Booking> getBookings()
+  {
+    List<Booking> newBookings = Collections.unmodifiableList(bookings);
+    return newBookings;
+  }
+
+  public int numberOfBookings()
+  {
+    int number = bookings.size();
+    return number;
+  }
+
+  public boolean hasBookings()
+  {
+    boolean has = bookings.size() > 0;
+    return has;
+  }
+
+  public int indexOfBooking(Booking aBooking)
+  {
+    int index = bookings.indexOf(aBooking);
+    return index;
+  }
+  /* Code from template association_MinimumNumberOfMethod */
+  public static int minimumNumberOfFlights()
+  {
+    return 0;
+  }
+  /* Code from template association_AddManyToManyMethod */
+  public boolean addFlight(Flight aFlight)
+  {
+    boolean wasAdded = false;
+    if (flights.contains(aFlight)) { return false; }
+    flights.add(aFlight);
+    if (aFlight.indexOfSeat(this) != -1)
     {
-      return wasSet;
+      wasAdded = true;
+    }
+    else
+    {
+      wasAdded = aFlight.addSeat(this);
+      if (!wasAdded)
+      {
+        flights.remove(aFlight);
+      }
+    }
+    return wasAdded;
+  }
+  /* Code from template association_RemoveMany */
+  public boolean removeFlight(Flight aFlight)
+  {
+    boolean wasRemoved = false;
+    if (!flights.contains(aFlight))
+    {
+      return wasRemoved;
     }
 
-    Flight existingFlight = flight;
-    flight = aFlight;
-    if (existingFlight != null && !existingFlight.equals(aFlight))
+    int oldIndex = flights.indexOf(aFlight);
+    flights.remove(oldIndex);
+    if (aFlight.indexOfSeat(this) == -1)
     {
-      existingFlight.removeSeat(this);
+      wasRemoved = true;
     }
-    flight.addSeat(this);
-    wasSet = true;
-    return wasSet;
+    else
+    {
+      wasRemoved = aFlight.removeSeat(this);
+      if (!wasRemoved)
+      {
+        flights.add(oldIndex,aFlight);
+      }
+    }
+    return wasRemoved;
+  }
+  /* Code from template association_AddIndexControlFunctions */
+  public boolean addFlightAt(Flight aFlight, int index)
+  {  
+    boolean wasAdded = false;
+    if(addFlight(aFlight))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfFlights()) { index = numberOfFlights() - 1; }
+      flights.remove(aFlight);
+      flights.add(index, aFlight);
+      wasAdded = true;
+    }
+    return wasAdded;
+  }
+
+  public boolean addOrMoveFlightAt(Flight aFlight, int index)
+  {
+    boolean wasAdded = false;
+    if(flights.contains(aFlight))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfFlights()) { index = numberOfFlights() - 1; }
+      flights.remove(aFlight);
+      flights.add(index, aFlight);
+      wasAdded = true;
+    } 
+    else 
+    {
+      wasAdded = addFlightAt(aFlight, index);
+    }
+    return wasAdded;
+  }
+  /* Code from template association_MinimumNumberOfMethod */
+  public static int minimumNumberOfBookings()
+  {
+    return 0;
+  }
+  /* Code from template association_AddManyToManyMethod */
+  public boolean addBooking(Booking aBooking)
+  {
+    boolean wasAdded = false;
+    if (bookings.contains(aBooking)) { return false; }
+    bookings.add(aBooking);
+    if (aBooking.indexOfSeat(this) != -1)
+    {
+      wasAdded = true;
+    }
+    else
+    {
+      wasAdded = aBooking.addSeat(this);
+      if (!wasAdded)
+      {
+        bookings.remove(aBooking);
+      }
+    }
+    return wasAdded;
+  }
+  /* Code from template association_RemoveMany */
+  public boolean removeBooking(Booking aBooking)
+  {
+    boolean wasRemoved = false;
+    if (!bookings.contains(aBooking))
+    {
+      return wasRemoved;
+    }
+
+    int oldIndex = bookings.indexOf(aBooking);
+    bookings.remove(oldIndex);
+    if (aBooking.indexOfSeat(this) == -1)
+    {
+      wasRemoved = true;
+    }
+    else
+    {
+      wasRemoved = aBooking.removeSeat(this);
+      if (!wasRemoved)
+      {
+        bookings.add(oldIndex,aBooking);
+      }
+    }
+    return wasRemoved;
+  }
+  /* Code from template association_AddIndexControlFunctions */
+  public boolean addBookingAt(Booking aBooking, int index)
+  {  
+    boolean wasAdded = false;
+    if(addBooking(aBooking))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfBookings()) { index = numberOfBookings() - 1; }
+      bookings.remove(aBooking);
+      bookings.add(index, aBooking);
+      wasAdded = true;
+    }
+    return wasAdded;
+  }
+
+  public boolean addOrMoveBookingAt(Booking aBooking, int index)
+  {
+    boolean wasAdded = false;
+    if(bookings.contains(aBooking))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfBookings()) { index = numberOfBookings() - 1; }
+      bookings.remove(aBooking);
+      bookings.add(index, aBooking);
+      wasAdded = true;
+    } 
+    else 
+    {
+      wasAdded = addBookingAt(aBooking, index);
+    }
+    return wasAdded;
   }
 
   public void delete()
   {
-    Flight placeholderFlight = flight;
-    this.flight = null;
-    if(placeholderFlight != null)
+    ArrayList<Flight> copyOfFlights = new ArrayList<Flight>(flights);
+    flights.clear();
+    for(Flight aFlight : copyOfFlights)
     {
-      placeholderFlight.removeSeat(this);
+      if (aFlight.numberOfSeats() <= Flight.minimumNumberOfSeats())
+      {
+        aFlight.delete();
+      }
+      else
+      {
+        aFlight.removeSeat(this);
+      }
     }
-    Booking existingBooking = booking;
-    booking = null;
-    if (existingBooking != null)
+    ArrayList<Booking> copyOfBookings = new ArrayList<Booking>(bookings);
+    bookings.clear();
+    for(Booking aBooking : copyOfBookings)
     {
-      existingBooking.delete();
+      aBooking.removeSeat(this);
     }
   }
 
-  // line 62 "model.ump"
+  // line 63 "model.ump"
    public void assignSeat(){
     
   }
@@ -154,8 +336,6 @@ public class Seat
     return super.toString() + "["+
             "isOccuped" + ":" + getIsOccuped()+ "]" + System.getProperties().getProperty("line.separator") +
             "  " + "seatNumber" + "=" + (getSeatNumber() != null ? !getSeatNumber().equals(this)  ? getSeatNumber().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
-            "  " + "seatClass" + "=" + (getSeatClass() != null ? !getSeatClass().equals(this)  ? getSeatClass().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
-            "  " + "flight = "+(getFlight()!=null?Integer.toHexString(System.identityHashCode(getFlight())):"null") + System.getProperties().getProperty("line.separator") +
-            "  " + "booking = "+(getBooking()!=null?Integer.toHexString(System.identityHashCode(getBooking())):"null");
+            "  " + "seatClass" + "=" + (getSeatClass() != null ? !getSeatClass().equals(this)  ? getSeatClass().toString().replaceAll("  ","    ") : "this" : "null");
   }
 }

@@ -2,9 +2,10 @@
 /*This code was generated using the UMPLE 1.32.1.6535.66c005ced modeling language!*/
 
 
+import java.util.*;
 
-// line 95 "model.ump"
-// line 229 "model.ump"
+// line 96 "model.ump"
+// line 230 "model.ump"
 public class Crew
 {
 
@@ -19,23 +20,19 @@ public class Crew
   private string contactInfo;
 
   //Crew Associations
-  private Flight flight;
+  private List<Flight> flights;
 
   //------------------------
   // CONSTRUCTOR
   //------------------------
 
-  public Crew(string aCrewID, string aName, string aPosition, string aContactInfo, Flight aFlight)
+  public Crew(string aCrewID, string aName, string aPosition, string aContactInfo)
   {
     crewID = aCrewID;
     name = aName;
     position = aPosition;
     contactInfo = aContactInfo;
-    boolean didAddFlight = setFlight(aFlight);
-    if (!didAddFlight)
-    {
-      throw new RuntimeException("Unable to create crew due to flight. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
-    }
+    flights = new ArrayList<Flight>();
   }
 
   //------------------------
@@ -93,63 +90,147 @@ public class Crew
   {
     return contactInfo;
   }
-  /* Code from template association_GetOne */
-  public Flight getFlight()
+  /* Code from template association_GetMany */
+  public Flight getFlight(int index)
   {
-    return flight;
+    Flight aFlight = flights.get(index);
+    return aFlight;
   }
-  /* Code from template association_SetOneToMandatoryMany */
-  public boolean setFlight(Flight aFlight)
+
+  public List<Flight> getFlights()
   {
-    boolean wasSet = false;
-    //Must provide flight to crew
-    if (aFlight == null)
-    {
-      return wasSet;
-    }
+    List<Flight> newFlights = Collections.unmodifiableList(flights);
+    return newFlights;
+  }
 
-    if (flight != null && flight.numberOfCrews() <= Flight.minimumNumberOfCrews())
-    {
-      return wasSet;
-    }
+  public int numberOfFlights()
+  {
+    int number = flights.size();
+    return number;
+  }
 
-    Flight existingFlight = flight;
-    flight = aFlight;
-    if (existingFlight != null && !existingFlight.equals(aFlight))
+  public boolean hasFlights()
+  {
+    boolean has = flights.size() > 0;
+    return has;
+  }
+
+  public int indexOfFlight(Flight aFlight)
+  {
+    int index = flights.indexOf(aFlight);
+    return index;
+  }
+  /* Code from template association_MinimumNumberOfMethod */
+  public static int minimumNumberOfFlights()
+  {
+    return 0;
+  }
+  /* Code from template association_AddManyToManyMethod */
+  public boolean addFlight(Flight aFlight)
+  {
+    boolean wasAdded = false;
+    if (flights.contains(aFlight)) { return false; }
+    flights.add(aFlight);
+    if (aFlight.indexOfCrew(this) != -1)
     {
-      boolean didRemove = existingFlight.removeCrew(this);
-      if (!didRemove)
+      wasAdded = true;
+    }
+    else
+    {
+      wasAdded = aFlight.addCrew(this);
+      if (!wasAdded)
       {
-        flight = existingFlight;
-        return wasSet;
+        flights.remove(aFlight);
       }
     }
-    flight.addCrew(this);
-    wasSet = true;
-    return wasSet;
+    return wasAdded;
+  }
+  /* Code from template association_RemoveMany */
+  public boolean removeFlight(Flight aFlight)
+  {
+    boolean wasRemoved = false;
+    if (!flights.contains(aFlight))
+    {
+      return wasRemoved;
+    }
+
+    int oldIndex = flights.indexOf(aFlight);
+    flights.remove(oldIndex);
+    if (aFlight.indexOfCrew(this) == -1)
+    {
+      wasRemoved = true;
+    }
+    else
+    {
+      wasRemoved = aFlight.removeCrew(this);
+      if (!wasRemoved)
+      {
+        flights.add(oldIndex,aFlight);
+      }
+    }
+    return wasRemoved;
+  }
+  /* Code from template association_AddIndexControlFunctions */
+  public boolean addFlightAt(Flight aFlight, int index)
+  {  
+    boolean wasAdded = false;
+    if(addFlight(aFlight))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfFlights()) { index = numberOfFlights() - 1; }
+      flights.remove(aFlight);
+      flights.add(index, aFlight);
+      wasAdded = true;
+    }
+    return wasAdded;
+  }
+
+  public boolean addOrMoveFlightAt(Flight aFlight, int index)
+  {
+    boolean wasAdded = false;
+    if(flights.contains(aFlight))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfFlights()) { index = numberOfFlights() - 1; }
+      flights.remove(aFlight);
+      flights.add(index, aFlight);
+      wasAdded = true;
+    } 
+    else 
+    {
+      wasAdded = addFlightAt(aFlight, index);
+    }
+    return wasAdded;
   }
 
   public void delete()
   {
-    Flight placeholderFlight = flight;
-    this.flight = null;
-    if(placeholderFlight != null)
+    ArrayList<Flight> copyOfFlights = new ArrayList<Flight>(flights);
+    flights.clear();
+    for(Flight aFlight : copyOfFlights)
     {
-      placeholderFlight.removeCrew(this);
+      if (aFlight.numberOfCrews() <= Flight.minimumNumberOfCrews())
+      {
+        aFlight.delete();
+      }
+      else
+      {
+        aFlight.removeCrew(this);
+      }
     }
   }
 
-  // line 103 "model.ump"
+  // line 104 "model.ump"
    public void viewFlight(){
     
   }
 
-  // line 106 "model.ump"
+  // line 107 "model.ump"
    public void performSafetCheck(){
     
   }
 
-  // line 109 "model.ump"
+  // line 110 "model.ump"
    public void assistPassengers(){
     
   }
@@ -161,7 +242,6 @@ public class Crew
             "  " + "crewID" + "=" + (getCrewID() != null ? !getCrewID().equals(this)  ? getCrewID().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
             "  " + "name" + "=" + (getName() != null ? !getName().equals(this)  ? getName().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
             "  " + "position" + "=" + (getPosition() != null ? !getPosition().equals(this)  ? getPosition().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
-            "  " + "contactInfo" + "=" + (getContactInfo() != null ? !getContactInfo().equals(this)  ? getContactInfo().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
-            "  " + "flight = "+(getFlight()!=null?Integer.toHexString(System.identityHashCode(getFlight())):"null");
+            "  " + "contactInfo" + "=" + (getContactInfo() != null ? !getContactInfo().equals(this)  ? getContactInfo().toString().replaceAll("  ","    ") : "this" : "null");
   }
 }

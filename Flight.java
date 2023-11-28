@@ -4,8 +4,8 @@
 
 import java.util.*;
 
-// line 65 "model.ump"
-// line 218 "model.ump"
+// line 66 "model.ump"
+// line 219 "model.ump"
 public class Flight
 {
 
@@ -32,7 +32,7 @@ public class Flight
   // CONSTRUCTOR
   //------------------------
 
-  public Flight(string aFlightNumber, string aAircraftNo, string aDepartureAirport, string aArrivalAirport, datetime aDepartureTime, datetime aArrivalTime, string aStops, Aircraft aAircraft)
+  public Flight(string aFlightNumber, string aAircraftNo, string aDepartureAirport, string aArrivalAirport, datetime aDepartureTime, datetime aArrivalTime, string aStops, Aircraft aAircraft, Seat[] allSeats, Crew[] allCrews)
   {
     flightNumber = aFlightNumber;
     aircraftNo = aAircraftNo;
@@ -42,16 +42,26 @@ public class Flight
     arrivalTime = aArrivalTime;
     stops = aStops;
     seats = new ArrayList<Seat>();
+    boolean didAddSeats = setSeats(allSeats);
+    if (!didAddSeats)
+    {
+      throw new RuntimeException("Unable to create Flight, must have at least 1 seats. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
+    }
     if (aAircraft == null || aAircraft.getFlight() != null)
     {
       throw new RuntimeException("Unable to create Flight due to aAircraft. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
     }
     aircraft = aAircraft;
     crews = new ArrayList<Crew>();
+    boolean didAddCrews = setCrews(allCrews);
+    if (!didAddCrews)
+    {
+      throw new RuntimeException("Unable to create Flight, must have at least 1 crews. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
+    }
     boardingPasses = new ArrayList<BoardingPass>();
   }
 
-  public Flight(string aFlightNumber, string aAircraftNo, string aDepartureAirport, string aArrivalAirport, datetime aDepartureTime, datetime aArrivalTime, string aStops, string aAircraftIDForAircraft, string aModelForAircraft, int aCapacityForAircraft)
+  public Flight(string aFlightNumber, string aAircraftNo, string aDepartureAirport, string aArrivalAirport, datetime aDepartureTime, datetime aArrivalTime, string aStops, string aAircraftIDForAircraft, string aModelForAircraft, int aCapacityForAircraft, Seat[] allSeats, Crew[] allCrews)
   {
     flightNumber = aFlightNumber;
     aircraftNo = aAircraftNo;
@@ -61,8 +71,18 @@ public class Flight
     arrivalTime = aArrivalTime;
     stops = aStops;
     seats = new ArrayList<Seat>();
+    boolean didAddSeats = setSeats(allSeats);
+    if (!didAddSeats)
+    {
+      throw new RuntimeException("Unable to create Flight, must have at least 1 seats. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
+    }
     aircraft = new Aircraft(aAircraftIDForAircraft, aModelForAircraft, aCapacityForAircraft, this);
     crews = new ArrayList<Crew>();
+    boolean didAddCrews = setCrews(allCrews);
+    if (!didAddCrews)
+    {
+      throw new RuntimeException("Unable to create Flight, must have at least 1 crews. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
+    }
     boardingPasses = new ArrayList<BoardingPass>();
   }
 
@@ -255,45 +275,107 @@ public class Flight
     int index = boardingPasses.indexOf(aBoardingPass);
     return index;
   }
+  /* Code from template association_IsNumberOfValidMethod */
+  public boolean isNumberOfSeatsValid()
+  {
+    boolean isValid = numberOfSeats() >= minimumNumberOfSeats();
+    return isValid;
+  }
   /* Code from template association_MinimumNumberOfMethod */
   public static int minimumNumberOfSeats()
   {
-    return 0;
+    return 1;
   }
-  /* Code from template association_AddManyToOne */
-  public Seat addSeat(string aSeatNumber, string aSeatClass, boolean aIsOccuped, Booking aBooking)
-  {
-    return new Seat(aSeatNumber, aSeatClass, aIsOccuped, this, aBooking);
-  }
-
+  /* Code from template association_AddManyToManyMethod */
   public boolean addSeat(Seat aSeat)
   {
     boolean wasAdded = false;
     if (seats.contains(aSeat)) { return false; }
-    Flight existingFlight = aSeat.getFlight();
-    boolean isNewFlight = existingFlight != null && !this.equals(existingFlight);
-    if (isNewFlight)
+    seats.add(aSeat);
+    if (aSeat.indexOfFlight(this) != -1)
     {
-      aSeat.setFlight(this);
+      wasAdded = true;
     }
     else
     {
-      seats.add(aSeat);
+      wasAdded = aSeat.addFlight(this);
+      if (!wasAdded)
+      {
+        seats.remove(aSeat);
+      }
     }
-    wasAdded = true;
     return wasAdded;
   }
-
+  /* Code from template association_AddMStarToMany */
   public boolean removeSeat(Seat aSeat)
   {
     boolean wasRemoved = false;
-    //Unable to remove aSeat, as it must always have a flight
-    if (!this.equals(aSeat.getFlight()))
+    if (!seats.contains(aSeat))
     {
-      seats.remove(aSeat);
+      return wasRemoved;
+    }
+
+    if (numberOfSeats() <= minimumNumberOfSeats())
+    {
+      return wasRemoved;
+    }
+
+    int oldIndex = seats.indexOf(aSeat);
+    seats.remove(oldIndex);
+    if (aSeat.indexOfFlight(this) == -1)
+    {
       wasRemoved = true;
     }
+    else
+    {
+      wasRemoved = aSeat.removeFlight(this);
+      if (!wasRemoved)
+      {
+        seats.add(oldIndex,aSeat);
+      }
+    }
     return wasRemoved;
+  }
+  /* Code from template association_SetMStarToMany */
+  public boolean setSeats(Seat... newSeats)
+  {
+    boolean wasSet = false;
+    ArrayList<Seat> verifiedSeats = new ArrayList<Seat>();
+    for (Seat aSeat : newSeats)
+    {
+      if (verifiedSeats.contains(aSeat))
+      {
+        continue;
+      }
+      verifiedSeats.add(aSeat);
+    }
+
+    if (verifiedSeats.size() != newSeats.length || verifiedSeats.size() < minimumNumberOfSeats())
+    {
+      return wasSet;
+    }
+
+    ArrayList<Seat> oldSeats = new ArrayList<Seat>(seats);
+    seats.clear();
+    for (Seat aNewSeat : verifiedSeats)
+    {
+      seats.add(aNewSeat);
+      if (oldSeats.contains(aNewSeat))
+      {
+        oldSeats.remove(aNewSeat);
+      }
+      else
+      {
+        aNewSeat.addFlight(this);
+      }
+    }
+
+    for (Seat anOldSeat : oldSeats)
+    {
+      anOldSeat.removeFlight(this);
+    }
+    wasSet = true;
+    return wasSet;
   }
   /* Code from template association_AddIndexControlFunctions */
   public boolean addSeatAt(Seat aSeat, int index)
@@ -338,54 +420,96 @@ public class Flight
   {
     return 1;
   }
-  /* Code from template association_AddMandatoryManyToOne */
-  public Crew addCrew(string aCrewID, string aName, string aPosition, string aContactInfo)
-  {
-    Crew aNewCrew = new Crew(aCrewID, aName, aPosition, aContactInfo, this);
-    return aNewCrew;
-  }
-
+  /* Code from template association_AddManyToManyMethod */
   public boolean addCrew(Crew aCrew)
   {
     boolean wasAdded = false;
     if (crews.contains(aCrew)) { return false; }
-    Flight existingFlight = aCrew.getFlight();
-    boolean isNewFlight = existingFlight != null && !this.equals(existingFlight);
-
-    if (isNewFlight && existingFlight.numberOfCrews() <= minimumNumberOfCrews())
+    crews.add(aCrew);
+    if (aCrew.indexOfFlight(this) != -1)
     {
-      return wasAdded;
-    }
-    if (isNewFlight)
-    {
-      aCrew.setFlight(this);
+      wasAdded = true;
     }
     else
     {
-      crews.add(aCrew);
+      wasAdded = aCrew.addFlight(this);
+      if (!wasAdded)
+      {
+        crews.remove(aCrew);
+      }
     }
-    wasAdded = true;
     return wasAdded;
   }
-
+  /* Code from template association_AddMStarToMany */
   public boolean removeCrew(Crew aCrew)
   {
     boolean wasRemoved = false;
-    //Unable to remove aCrew, as it must always have a flight
-    if (this.equals(aCrew.getFlight()))
+    if (!crews.contains(aCrew))
     {
       return wasRemoved;
     }
 
-    //flight already at minimum (1)
     if (numberOfCrews() <= minimumNumberOfCrews())
     {
       return wasRemoved;
     }
 
-    crews.remove(aCrew);
-    wasRemoved = true;
+    int oldIndex = crews.indexOf(aCrew);
+    crews.remove(oldIndex);
+    if (aCrew.indexOfFlight(this) == -1)
+    {
+      wasRemoved = true;
+    }
+    else
+    {
+      wasRemoved = aCrew.removeFlight(this);
+      if (!wasRemoved)
+      {
+        crews.add(oldIndex,aCrew);
+      }
+    }
     return wasRemoved;
+  }
+  /* Code from template association_SetMStarToMany */
+  public boolean setCrews(Crew... newCrews)
+  {
+    boolean wasSet = false;
+    ArrayList<Crew> verifiedCrews = new ArrayList<Crew>();
+    for (Crew aCrew : newCrews)
+    {
+      if (verifiedCrews.contains(aCrew))
+      {
+        continue;
+      }
+      verifiedCrews.add(aCrew);
+    }
+
+    if (verifiedCrews.size() != newCrews.length || verifiedCrews.size() < minimumNumberOfCrews())
+    {
+      return wasSet;
+    }
+
+    ArrayList<Crew> oldCrews = new ArrayList<Crew>(crews);
+    crews.clear();
+    for (Crew aNewCrew : verifiedCrews)
+    {
+      crews.add(aNewCrew);
+      if (oldCrews.contains(aNewCrew))
+      {
+        oldCrews.remove(aNewCrew);
+      }
+      else
+      {
+        aNewCrew.addFlight(this);
+      }
+    }
+
+    for (Crew anOldCrew : oldCrews)
+    {
+      anOldCrew.removeFlight(this);
+    }
+    wasSet = true;
+    return wasSet;
   }
   /* Code from template association_AddIndexControlFunctions */
   public boolean addCrewAt(Crew aCrew, int index)
@@ -507,10 +631,11 @@ public class Flight
     {
       existingAircraft.delete();
     }
-    for(int i=crews.size(); i > 0; i--)
+    ArrayList<Crew> copyOfCrews = new ArrayList<Crew>(crews);
+    crews.clear();
+    for(Crew aCrew : copyOfCrews)
     {
-      Crew aCrew = crews.get(i - 1);
-      aCrew.delete();
+      aCrew.removeFlight(this);
     }
     for(int i=boardingPasses.size(); i > 0; i--)
     {
@@ -519,7 +644,7 @@ public class Flight
     }
   }
 
-  // line 76 "model.ump"
+  // line 77 "model.ump"
    public void checkAvailability(){
     
   }

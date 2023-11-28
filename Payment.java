@@ -2,9 +2,10 @@
 /*This code was generated using the UMPLE 1.32.1.6535.66c005ced modeling language!*/
 
 
+import java.util.*;
 
-// line 79 "model.ump"
-// line 223 "model.ump"
+// line 80 "model.ump"
+// line 224 "model.ump"
 public class Payment
 {
 
@@ -20,32 +21,19 @@ public class Payment
 
   //Payment Associations
   private Refund refund;
-  private Booking booking;
+  private List<Booking> bookings;
 
   //------------------------
   // CONSTRUCTOR
   //------------------------
 
-  public Payment(string aPaymentID, int aAmount, string aCurrency, string aBookingID, Booking aBooking)
+  public Payment(string aPaymentID, int aAmount, string aCurrency, string aBookingID)
   {
     paymentID = aPaymentID;
     amount = aAmount;
     currency = aCurrency;
     bookingID = aBookingID;
-    if (aBooking == null || aBooking.getPayment() != null)
-    {
-      throw new RuntimeException("Unable to create Payment due to aBooking. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
-    }
-    booking = aBooking;
-  }
-
-  public Payment(string aPaymentID, int aAmount, string aCurrency, string aBookingID, string aBookingIDForBooking, date aBookingDateForBooking, string aPaymentInfoForBooking, Passenger aPassengerForBooking, Seat aSeatForBooking)
-  {
-    paymentID = aPaymentID;
-    amount = aAmount;
-    currency = aCurrency;
-    bookingID = aBookingID;
-    booking = new Booking(aBookingIDForBooking, aBookingDateForBooking, aPaymentInfoForBooking, aPassengerForBooking, aSeatForBooking, this);
+    bookings = new ArrayList<Booking>();
   }
 
   //------------------------
@@ -114,10 +102,35 @@ public class Payment
     boolean has = refund != null;
     return has;
   }
-  /* Code from template association_GetOne */
-  public Booking getBooking()
+  /* Code from template association_GetMany */
+  public Booking getBooking(int index)
   {
-    return booking;
+    Booking aBooking = bookings.get(index);
+    return aBooking;
+  }
+
+  public List<Booking> getBookings()
+  {
+    List<Booking> newBookings = Collections.unmodifiableList(bookings);
+    return newBookings;
+  }
+
+  public int numberOfBookings()
+  {
+    int number = bookings.size();
+    return number;
+  }
+
+  public boolean hasBookings()
+  {
+    boolean has = bookings.size() > 0;
+    return has;
+  }
+
+  public int indexOfBooking(Booking aBooking)
+  {
+    int index = bookings.indexOf(aBooking);
+    return index;
   }
   /* Code from template association_SetOptionalOneToOne */
   public boolean setRefund(Refund aNewRefund)
@@ -146,6 +159,88 @@ public class Payment
     wasSet = true;
     return wasSet;
   }
+  /* Code from template association_MinimumNumberOfMethod */
+  public static int minimumNumberOfBookings()
+  {
+    return 0;
+  }
+  /* Code from template association_AddManyToManyMethod */
+  public boolean addBooking(Booking aBooking)
+  {
+    boolean wasAdded = false;
+    if (bookings.contains(aBooking)) { return false; }
+    bookings.add(aBooking);
+    if (aBooking.indexOfPayment(this) != -1)
+    {
+      wasAdded = true;
+    }
+    else
+    {
+      wasAdded = aBooking.addPayment(this);
+      if (!wasAdded)
+      {
+        bookings.remove(aBooking);
+      }
+    }
+    return wasAdded;
+  }
+  /* Code from template association_RemoveMany */
+  public boolean removeBooking(Booking aBooking)
+  {
+    boolean wasRemoved = false;
+    if (!bookings.contains(aBooking))
+    {
+      return wasRemoved;
+    }
+
+    int oldIndex = bookings.indexOf(aBooking);
+    bookings.remove(oldIndex);
+    if (aBooking.indexOfPayment(this) == -1)
+    {
+      wasRemoved = true;
+    }
+    else
+    {
+      wasRemoved = aBooking.removePayment(this);
+      if (!wasRemoved)
+      {
+        bookings.add(oldIndex,aBooking);
+      }
+    }
+    return wasRemoved;
+  }
+  /* Code from template association_AddIndexControlFunctions */
+  public boolean addBookingAt(Booking aBooking, int index)
+  {  
+    boolean wasAdded = false;
+    if(addBooking(aBooking))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfBookings()) { index = numberOfBookings() - 1; }
+      bookings.remove(aBooking);
+      bookings.add(index, aBooking);
+      wasAdded = true;
+    }
+    return wasAdded;
+  }
+
+  public boolean addOrMoveBookingAt(Booking aBooking, int index)
+  {
+    boolean wasAdded = false;
+    if(bookings.contains(aBooking))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfBookings()) { index = numberOfBookings() - 1; }
+      bookings.remove(aBooking);
+      bookings.add(index, aBooking);
+      wasAdded = true;
+    } 
+    else 
+    {
+      wasAdded = addBookingAt(aBooking, index);
+    }
+    return wasAdded;
+  }
 
   public void delete()
   {
@@ -155,15 +250,15 @@ public class Payment
     {
       existingRefund.delete();
     }
-    Booking existingBooking = booking;
-    booking = null;
-    if (existingBooking != null)
+    ArrayList<Booking> copyOfBookings = new ArrayList<Booking>(bookings);
+    bookings.clear();
+    for(Booking aBooking : copyOfBookings)
     {
-      existingBooking.delete();
+      aBooking.removePayment(this);
     }
   }
 
-  // line 88 "model.ump"
+  // line 89 "model.ump"
    public void makeRefund(){
     
   }
@@ -176,7 +271,6 @@ public class Payment
             "  " + "paymentID" + "=" + (getPaymentID() != null ? !getPaymentID().equals(this)  ? getPaymentID().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
             "  " + "currency" + "=" + (getCurrency() != null ? !getCurrency().equals(this)  ? getCurrency().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
             "  " + "bookingID" + "=" + (getBookingID() != null ? !getBookingID().equals(this)  ? getBookingID().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
-            "  " + "refund = "+(getRefund()!=null?Integer.toHexString(System.identityHashCode(getRefund())):"null") + System.getProperties().getProperty("line.separator") +
-            "  " + "booking = "+(getBooking()!=null?Integer.toHexString(System.identityHashCode(getBooking())):"null");
+            "  " + "refund = "+(getRefund()!=null?Integer.toHexString(System.identityHashCode(getRefund())):"null");
   }
 }

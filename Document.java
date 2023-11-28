@@ -2,9 +2,10 @@
 /*This code was generated using the UMPLE 1.32.1.6535.66c005ced modeling language!*/
 
 
+import java.util.*;
 
-// line 155 "model.ump"
-// line 239 "model.ump"
+// line 156 "model.ump"
+// line 240 "model.ump"
 public class Document
 {
 
@@ -17,28 +18,17 @@ public class Document
   private string docType;
 
   //Document Associations
-  private Passenger passenger;
+  private List<Passenger> passengers;
 
   //------------------------
   // CONSTRUCTOR
   //------------------------
 
-  public Document(string aDocID, string aDocType, Passenger aPassenger)
+  public Document(string aDocID, string aDocType)
   {
     docID = aDocID;
     docType = aDocType;
-    if (aPassenger == null || aPassenger.getDocument() != null)
-    {
-      throw new RuntimeException("Unable to create Document due to aPassenger. See http://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
-    }
-    passenger = aPassenger;
-  }
-
-  public Document(string aDocID, string aDocType, string aPassIDForPassenger, string aNameForPassenger, string aEmailForPassenger, string aPhoneForPassenger, string aAddressForPassenger)
-  {
-    docID = aDocID;
-    docType = aDocType;
-    passenger = new Passenger(aPassIDForPassenger, aNameForPassenger, aEmailForPassenger, aPhoneForPassenger, aAddressForPassenger, this);
+    passengers = new ArrayList<Passenger>();
   }
 
   //------------------------
@@ -70,23 +60,130 @@ public class Document
   {
     return docType;
   }
-  /* Code from template association_GetOne */
-  public Passenger getPassenger()
+  /* Code from template association_GetMany */
+  public Passenger getPassenger(int index)
   {
-    return passenger;
+    Passenger aPassenger = passengers.get(index);
+    return aPassenger;
+  }
+
+  public List<Passenger> getPassengers()
+  {
+    List<Passenger> newPassengers = Collections.unmodifiableList(passengers);
+    return newPassengers;
+  }
+
+  public int numberOfPassengers()
+  {
+    int number = passengers.size();
+    return number;
+  }
+
+  public boolean hasPassengers()
+  {
+    boolean has = passengers.size() > 0;
+    return has;
+  }
+
+  public int indexOfPassenger(Passenger aPassenger)
+  {
+    int index = passengers.indexOf(aPassenger);
+    return index;
+  }
+  /* Code from template association_MinimumNumberOfMethod */
+  public static int minimumNumberOfPassengers()
+  {
+    return 0;
+  }
+  /* Code from template association_AddManyToManyMethod */
+  public boolean addPassenger(Passenger aPassenger)
+  {
+    boolean wasAdded = false;
+    if (passengers.contains(aPassenger)) { return false; }
+    passengers.add(aPassenger);
+    if (aPassenger.indexOfDocument(this) != -1)
+    {
+      wasAdded = true;
+    }
+    else
+    {
+      wasAdded = aPassenger.addDocument(this);
+      if (!wasAdded)
+      {
+        passengers.remove(aPassenger);
+      }
+    }
+    return wasAdded;
+  }
+  /* Code from template association_RemoveMany */
+  public boolean removePassenger(Passenger aPassenger)
+  {
+    boolean wasRemoved = false;
+    if (!passengers.contains(aPassenger))
+    {
+      return wasRemoved;
+    }
+
+    int oldIndex = passengers.indexOf(aPassenger);
+    passengers.remove(oldIndex);
+    if (aPassenger.indexOfDocument(this) == -1)
+    {
+      wasRemoved = true;
+    }
+    else
+    {
+      wasRemoved = aPassenger.removeDocument(this);
+      if (!wasRemoved)
+      {
+        passengers.add(oldIndex,aPassenger);
+      }
+    }
+    return wasRemoved;
+  }
+  /* Code from template association_AddIndexControlFunctions */
+  public boolean addPassengerAt(Passenger aPassenger, int index)
+  {  
+    boolean wasAdded = false;
+    if(addPassenger(aPassenger))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfPassengers()) { index = numberOfPassengers() - 1; }
+      passengers.remove(aPassenger);
+      passengers.add(index, aPassenger);
+      wasAdded = true;
+    }
+    return wasAdded;
+  }
+
+  public boolean addOrMovePassengerAt(Passenger aPassenger, int index)
+  {
+    boolean wasAdded = false;
+    if(passengers.contains(aPassenger))
+    {
+      if(index < 0 ) { index = 0; }
+      if(index > numberOfPassengers()) { index = numberOfPassengers() - 1; }
+      passengers.remove(aPassenger);
+      passengers.add(index, aPassenger);
+      wasAdded = true;
+    } 
+    else 
+    {
+      wasAdded = addPassengerAt(aPassenger, index);
+    }
+    return wasAdded;
   }
 
   public void delete()
   {
-    Passenger existingPassenger = passenger;
-    passenger = null;
-    if (existingPassenger != null)
+    ArrayList<Passenger> copyOfPassengers = new ArrayList<Passenger>(passengers);
+    passengers.clear();
+    for(Passenger aPassenger : copyOfPassengers)
     {
-      existingPassenger.delete();
+      aPassenger.removeDocument(this);
     }
   }
 
-  // line 161 "model.ump"
+  // line 162 "model.ump"
    public void validateDocument(){
     
   }
@@ -96,7 +193,6 @@ public class Document
   {
     return super.toString() + "["+ "]" + System.getProperties().getProperty("line.separator") +
             "  " + "docID" + "=" + (getDocID() != null ? !getDocID().equals(this)  ? getDocID().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
-            "  " + "docType" + "=" + (getDocType() != null ? !getDocType().equals(this)  ? getDocType().toString().replaceAll("  ","    ") : "this" : "null") + System.getProperties().getProperty("line.separator") +
-            "  " + "passenger = "+(getPassenger()!=null?Integer.toHexString(System.identityHashCode(getPassenger())):"null");
+            "  " + "docType" + "=" + (getDocType() != null ? !getDocType().equals(this)  ? getDocType().toString().replaceAll("  ","    ") : "this" : "null");
   }
 }

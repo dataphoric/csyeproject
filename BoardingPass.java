@@ -4,8 +4,8 @@
 
 import java.util.*;
 
-// line 23 "model.ump"
-// line 197 "model.ump"
+// line 24 "model.ump"
+// line 198 "model.ump"
 public class BoardingPass
 {
 

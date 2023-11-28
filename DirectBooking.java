@@ -2,9 +2,10 @@
 /*This code was generated using the UMPLE 1.32.1.6535.66c005ced modeling language!*/
 
 
+import java.util.*;
 
-// line 149 "model.ump"
-// line 234 "model.ump"
+// line 150 "model.ump"
+// line 235 "model.ump"
 public class DirectBooking extends Booking
 {
 
@@ -19,9 +20,9 @@ public class DirectBooking extends Booking
   // CONSTRUCTOR
   //------------------------
 
-  public DirectBooking(string aBookingID, date aBookingDate, string aPaymentInfo, Passenger aPassenger, Seat aSeat, Payment aPayment, string aStatus)
+  public DirectBooking(string aBookingID, date aBookingDate, string aPaymentInfo, Passenger aPassenger, string aStatus)
   {
-    super(aBookingID, aBookingDate, aPaymentInfo, aPassenger, aSeat, aPayment);
+    super(aBookingID, aBookingDate, aPaymentInfo, aPassenger);
     status = aStatus;
   }
 
